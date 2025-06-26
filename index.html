@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escribe o Muere</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #f4f4f4;
+      font-family: 'Space Mono', monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #emailSection {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    #emailInput {
+      padding: 10px;
+      font-size: 16px;
+      width: 260px;
+      border: none;
+      border-radius: 5px;
+    }
+    #startBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      background-color: #e5ff00;
+      color: #000;
+      margin-left: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #timer {
+      font-size: 24px;
+      margin-bottom: 10px;
+      display: none;
+    }
+    #editor {
+      display: none;
+      width: 80%;
+      height: 50%;
+      padding: 20px;
+      border: none;
+      background-color: #0d0d0d;
+      color: #f4f4f4;
+      font-size: 16px;
+      resize: none;
+    }
+    #saveBtn {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #e5ff00;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #footer {
+      font-size: 12px;
+      color: #666;
+      position: absolute;
+      bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="emailSection">
+    <p>Este ritual me cambió la vida. Tal vez a ti también.</p>
+    <input type="email" id="emailInput" placeholder="Tu correo" required>
+    <button id="startBtn">Empezar</button>
+  </div>
+
+  <div id="timer">5:00</div>
+  <textarea id="editor" placeholder="Escribe como si nadie fuera a leerte..."></textarea>
+  <button id="saveBtn">Guardar texto</button>
+  <div id="footer">por Fernando</div>
+
+  <script>
+    window.onload = function () {
+      const startBtn = document.getElementById("startBtn");
+      const emailInput = document.getElementById("emailInput");
+      const editor = document.getElementById("editor");
+      const timerDisplay = document.getElementById("timer");
+      const saveBtn = document.getElementById("saveBtn");
+      const emailSection = document.getElementById("emailSection");
+
+      let countdown, idleTime, writing, timerInterval, idleInterval;
+
+      function updateTimer() {
+        let minutes = Math.floor(countdown / 60);
+        let seconds = countdown % 60;
+        timerDisplay.textContent = \`\${minutes}:\${seconds < 10 ? '0' : ''}\${seconds}\`;
+        if (countdown <= 10) {
+          timerDisplay.style.color = '#e5ff00';
+        }
+        if (countdown === 0) {
+          writing = false;
+          clearInterval(timerInterval);
+          clearInterval(idleInterval);
+          editor.disabled = true;
+          saveBtn.style.display = "block";
+        }
+        countdown--;
+      }
+
+      function resetIdleTimer() {
+        idleTime = 0;
+      }
+
+      function startApp() {
+        const email = emailInput.value;
+        if (!email || !email.includes("@")) {
+          alert("Por favor ingresa un correo válido.");
+          return;
+        }
+
+        console.log("Botón clickeado, iniciando app...");
+
+        emailSection.style.display = "none";
+        editor.style.display = "block";
+        timerDisplay.style.display = "block";
+
+        countdown = 300;
+        idleTime = 0;
+        writing = true;
+
+        editor.value = "";
+        editor.disabled = false;
+        saveBtn.style.display = "none";
+        timerDisplay.style.color = "#f4f4f4";
+
+        editor.addEventListener("input", resetIdleTimer);
+
+        clearInterval(idleInterval);
+        clearInterval(timerInterval);
+
+        idleInterval = setInterval(() => {
+          if (!writing) return;
+          idleTime++;
+          if (idleTime >= 5) {
+            clearInterval(timerInterval);
+            clearInterval(idleInterval);
+            editor.value = "";
+            timerDisplay.textContent = "5:00";
+            alert("Te detuviste. Todo se borró.");
+            startApp();
+          }
+        }, 1000);
+
+        timerInterval = setInterval(updateTimer, 1000);
+
+        saveBtn.addEventListener("click", () => {
+          const blob = new Blob([editor.value], { type: "text/plain" });
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = "escritura.txt";
+          link.click();
+        });
+
+        editor.focus();
+      }
+
+      startBtn.addEventListener("click", startApp);
+    };
+  </script>
+</body>
+</html>
