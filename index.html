@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Escritura Peligrosa - Modo Hardcore</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #intro, #emailForm {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #emailForm input[type="email"] {
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+      border: none;
+      border-radius: 4px;
+    }
+
+    #emailForm button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #001f3f; /* azul navy */
+      color: white;
+      cursor: pointer;
+    }
+
+    #editor {
+      display: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    #textarea {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 18px;
+      padding: 20px;
+      resize: none;
+      outline: none;
+      font-family: monospace;
+    }
+
+    #progressContainer {
+      width: 100%;
+      height: 4px;
+      background: #333;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0;
+      background: #001f3f; /* azul navy */
+      transition: width 1s linear;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 12px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <p>Este ritual me cambió la vida. Tal vez a ti también.</p>
+    <form id="emailForm">
+      <input type="email" id="emailInput" placeholder="Tu correo" required />
+      <button type="submit">Empezar</button>
+    </form>
+  </div>
+
+  <div id="editor">
+    <div id="progressContainer"><div id="progressBar"></div></div>
+    <textarea id="textarea" autofocus></textarea>
+  </div>
+
+  <footer>por Fernando</footer>
+
+  <script>
+    const emailForm = document.getElementById("emailForm");
+    const emailInput = document.getElementById("emailInput");
+    const intro = document.getElementById("intro");
+    const editor = document.getElementById("editor");
+    const textarea = document.getElementById("textarea");
+    const progressBar = document.getElementById("progressBar");
+
+    let timer;
+    let progress = 0;
+    let isWriting = false;
+    const totalSeconds = 300; // 5 minutos
+
+    emailForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value;
+
+      // Guardar correo en Google Sheet
+      await fetch("https://script.google.com/macros/s/AKfycbwm7451PNxvXY5fAJ7aP8ikQ09GkCVTqW6-IYzTbdWX1-iM66-v-mwlwsLx_7c3LMydwQ/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
+
+      intro.style.display = "none";
+      editor.style.display = "block";
+      startSession();
+    });
+
+    function startSession() {
+      let remaining = totalSeconds;
+      textarea.value = "";
+      textarea.focus();
+      isWriting = true;
+
+      progressBar.style.width = "0%";
+      const interval = 1000;
+
+      timer = setInterval(() => {
+        remaining--;
+        progress = ((totalSeconds - remaining) / totalSeconds) * 100;
+        progressBar.style.width = progress + "%";
+
+        if (remaining <= 0) {
+          clearInterval(timer);
+          alert("Tiempo terminado. Puedes guardar tu texto.");
+        }
+      }, interval);
+
+      let typingTimeout;
+      textarea.addEventListener("keydown", () => {
+        clearTimeout(typingTimeout);
+        typingTimeout = setTimeout(() => {
+          // Si deja de escribir 5s, reinicia
+          clearInterval(timer);
+          textarea.value = "";
+          progressBar.style.width = "0%";
+          remaining = totalSeconds;
+        }, 5000);
+      });
+    }
+  </script>
+</body>
+</html>
